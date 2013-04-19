@@ -1,0 +1,20 @@
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes.dex : \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/BuildConfig.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/R$attr.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/R$drawable.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/R$id.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/R$layout.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/R$string.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/R.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/RecognitionListener.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/RecognizerTask$1.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/RecognizerTask$AudioTask.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/RecognizerTask$Event.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/RecognizerTask$State.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/RecognizerTask.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/ShortTimeEnergyActivity$1.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/ShortTimeEnergyActivity$2.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/ShortTimeEnergyActivity$3.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/ShortTimeEnergyActivity$LoadRecognizerTask.class \
+/Users/khoanguyen/workspaces/android-projects/VAD/bin/classes/asr/vad/ShortTimeEnergyActivity.class \
+/Users/khoanguyen/Documents/android-sdk-macosx/tools/support/annotations.jar \
