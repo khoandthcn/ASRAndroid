@@ -1,6 +1,0 @@
-# view AndroidManifest.xml #generated:7
--keep class asr.vad.ShortTimeEnergyActivity { <init>(...); }
-
-# onClick res/layout/main.xml #generated:13
--keepclassmembers class * { *** speakBtn_click(...); }
-

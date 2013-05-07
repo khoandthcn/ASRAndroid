@@ -1,3 +1,5 @@
+package asr.vad;
+
 public class SpeechSegment {
 
   /*
