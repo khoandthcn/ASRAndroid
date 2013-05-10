@@ -94,6 +94,57 @@ public class VoiceActivityDectector implements Runnable {
 
 	protected boolean done;
 
+	/**
+	 * Properties extended from cont_ad.h
+	 * */
+
+	protected enum State {
+		STATE_SIL, STATE_SPEECH
+	}
+
+	protected State state;
+
+	/* Number of completed frames */
+	protected int nframe;
+
+	/* Samples per frame for analysis */
+	protected int spf;
+
+	/*
+	 * If in SILENCE state, number of frames in analysis window considered to be
+	 * speech; otherwise number of frames considered to be silence
+	 */
+	protected int n_other;
+
+	/* Store power of FRAME_SIZE frames */
+	protected int[] frm_pow;
+
+	/* Store power histogram */
+	protected int[] pow_hist;
+
+	/*
+	 * < Frame considered to be speech if power >= thresh_speech (for transition
+	 * from SILENCE to SPEECH state)
+	 */
+	protected int threshold_speech;
+
+	/*
+	 * < Frame considered to be silence if power <= thresh_sil (for transition
+	 * from SPEECH to SILENCE state)
+	 */
+	protected int threshold_sil;
+
+	/* < Number of frames before next update to pow_hist/thresholds */
+	protected int thresold_update;
+
+	/*
+	 * < Linear interpolation constant for rate at which noise level adapted to
+	 * each estimate; range: 0-1; 0=> no adaptation, 1=> instant adaptation
+	 */
+	protected double adapt_rate;
+	
+	protected LinkedBlockingQueue<short[]> window_buf;
+
 	public VoiceActivityDectector() {
 		initialize(new LinkedBlockingQueue<short[]>(), DEFAULT_BLOCK_SIZE);
 	}
@@ -119,8 +170,9 @@ public class VoiceActivityDectector implements Runnable {
 		this.rec.startRecording();
 		while (!this.done) {
 			int nshorts = this.readBlock();
-			if (nshorts <= 0)
+			if (nshorts <= 0) {
 				break;
+			}
 		}
 		this.rec.stop();
 		this.rec.release();
@@ -144,6 +196,22 @@ public class VoiceActivityDectector implements Runnable {
 			this.audioQueue.add(buf);
 		}
 		return nshorts;
+	}
+
+	/**
+	 * @param Break
+	 *            read data into frame and update threshold
+	 * */
+	private void classify() {
+	}
+
+	/**
+	 * @param frameIndex
+	 * 
+	 *            Start to process on each analysis frame when it reach full
+	 *            analysis window size
+	 * */
+	private void boundaryDetect(int frameIndex) {
 	}
 
 }
