@@ -2,11 +2,11 @@
 
 ## Voice Activity Dectection module
 
-###-sil-to SPEECH transition
+### SIL to SPEECH transition
 Create new head SpeechSegment:
-* start_frm point to the first leader frame
-* initialize number of speech frames equal to sum of leader and win_size
-* reset window start_frm to current analysis frame
+	start_frm point to the first leader frame
+	Initialize number of speech frames equal to sum of leader and win_size
+	Reset window start_frm to current analysis frame
 
 	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
 		  |<--------------SpeechSegment.nfrm------------------->|
@@ -26,7 +26,8 @@ Create new head SpeechSegment:
 															  frame
 
 
-### In SPEECH state: stayint there and add this frame to segment
+### In SPEECH state: 
+Staying there and add this frame to segment
 
 	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
 					  |<-----------------win_size-------------->|
