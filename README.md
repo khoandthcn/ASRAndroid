@@ -8,7 +8,7 @@ start_frm point to the first leader frame;
 initialize number of speech frames equal to sum of leader and win_size; 
 reset window start_frm to current analysis frame
 
-	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
+	|<----------------------------------------------Internal buffer frames------------------------------------------------->|
 		  |<--------------[head]SpeechSegment.nfrm------------->|
 					  |<-----------------win_size-------------->|
 		  |<--leader->|
@@ -28,7 +28,7 @@ reset window start_frm to current analysis frame
 ### In SPEECH state
 Staying there and add this frame to segment
 
-	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
+	|<----------------------------------------------Internal buffer frames------------------------------------------------->|
 		  |<-[tail]SpeechSegment.nfrm-->|
 										|<-----------------win_size-------------->|
 	-------------------------------------------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ Staying there and add this frame to segment
 
 ### SPEECH to SIL transition
 
-	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
+	|<----------------------------------------------Internal buffer frames------------------------------------------------->|
 		  |<----------------[tail]SpeechSegment.nfrm----------------->|
 													|<-----------------win_size-------------->|
 													|<----trailer---->|
