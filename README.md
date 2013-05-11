@@ -2,18 +2,18 @@
 
 ## Voice Activity Dectection module
 
-### SIL to SPEECH transition
+###-sil-to SPEECH transition
 Create new head SpeechSegment:
- - start_frm point to the first leader frame
- - initialize number of speech frames equal to sum of leader and win_size
- - reset window start_frm to current analysis frame
+* start_frm point to the first leader frame
+* initialize number of speech frames equal to sum of leader and win_size
+* reset window start_frm to current analysis frame
 
-	<---------------------------------------------------FRAME_SIZE frames--------------------------------------------------->
-		   <--------------SpeechSegment.nfrm------------------->
-					  <-----------------win_size--------------->
-		   <--leader->
+	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
+		  |<--------------SpeechSegment.nfrm------------------->|
+					  |<-----------------win_size-------------->|
+		  |<--leader->|
 	-------------------------------------------------------------------------------------------------------------------------
-	|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame| ... |frame|frame|frame|
+	|-sil-|voice|voice|-sil-|-sil-|voice|voice|voice|-sil-|voice|     |     |     |     |     |     | ... |     |     |     |
 	-------------------------------------------------------------------------------------------------------------------------
 		  ^			  ^											^
 		  |			  |										 	|
@@ -26,14 +26,21 @@ Create new head SpeechSegment:
 															  frame
 
 
-	<---------------------------------------------------FRAME_SIZE frames--------------------------------------------------->
-					  <-----------------win_size--------------->
-		   <--leader->
+### In SPEECH state: stayint there and add this frame to segment
+
+	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
+					  |<-----------------win_size-------------->|
+		  |<--leader->|
 	-------------------------------------------------------------------------------------------------------------------------
-	|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame|frame| ... |frame|frame|frame|
+	|-sil-|voice|voice|-sil-|-sil-|voice|voice|voice|-sil-|voice|voice|voice|     |     |     |     | ... |     |     |     |
 	-------------------------------------------------------------------------------------------------------------------------
-																^
-															 	|
-															 current
-														 	 analysis
-														 	  frame
+																			^
+																		 	|
+																		 current
+																	 	 analysis
+																	 	  frame
+														 	  
+														 	  
+														 	  
+														 	  
+														 	  
