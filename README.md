@@ -17,13 +17,13 @@ reset window start_frm to current analysis frame
 	-------------------------------------------------------------------------------------------------------------------------
 		  ^			  ^											^
 		  |			  |										 	|
-		spseg	  old window								 current
-		start		start								 	 analysis
-		frame		frame								 	  frame
-																^
-															new window
-															  start
-															  frame
+		spseg		  |										 current
+		start		  |									 	 analysis
+		frame		  |									 	  frame
+					  |											^
+				  old window								new window
+					start	------------------------------ >  start
+					frame									  frame
 
 ### In SPEECH state
 Staying there and add this frame to segment
