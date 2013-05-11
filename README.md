@@ -3,17 +3,17 @@
 ## Voice Activity Dectection module
 
 ### SIL to SPEECH transition
-Create new head SpeechSegment:
-	start_frm point to the first leader frame
-	Initialize number of speech frames equal to sum of leader and win_size
-	Reset window start_frm to current analysis frame
+Create new head SpeechSegment: 
+start_frm point to the first leader frame; 
+initialize number of speech frames equal to sum of leader and win_size; 
+reset window start_frm to current analysis frame
 
 	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
-		  |<--------------SpeechSegment.nfrm------------------->|
+		  |<--------------[head]SpeechSegment.nfrm------------->|
 					  |<-----------------win_size-------------->|
 		  |<--leader->|
 	-------------------------------------------------------------------------------------------------------------------------
-	|-sil-|voice|voice|-sil-|-sil-|voice|voice|voice|-sil-|voice|     |     |     |     |     |     | ... |     |     |     |
+	|-sil-|voice|voice|voice|-sil-|voice|voice|voice|-sil-|voice|voice|     |     |     |     |     | ... |     |     |     |
 	-------------------------------------------------------------------------------------------------------------------------
 		  ^			  ^											^
 		  |			  |										 	|
@@ -25,23 +25,64 @@ Create new head SpeechSegment:
 															  start
 															  frame
 
-
-### In SPEECH state: 
+### In SPEECH state
 Staying there and add this frame to segment
 
 	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
-					  |<-----------------win_size-------------->|
-		  |<--leader->|
+		  |<-[tail]SpeechSegment.nfrm-->|
+										|<-----------------win_size-------------->|
 	-------------------------------------------------------------------------------------------------------------------------
-	|-sil-|voice|voice|-sil-|-sil-|voice|voice|voice|-sil-|voice|voice|voice|     |     |     |     | ... |     |     |     |
+	|-sil-|voice| ... |voice|-sil-|voice|voice|voice|-sil-|voice|voice|voice|voice|     |     |     | ... |     |     |     |
 	-------------------------------------------------------------------------------------------------------------------------
-																			^
-																		 	|
-																		 current
-																	 	 analysis
-																	 	  frame
-														 	  
-														 	  
-														 	  
-														 	  
-														 	  
+		  ^								^										  ^
+		  |								|										  |
+		spseg						  window									current
+		start						  start										analysis
+		frame						  frame										 frame
+
+### SPEECH to SIL transition
+
+	|<---------------------------------------------------FRAME_SIZE frames------------------------------------------------->|
+		  |<----------------[tail]SpeechSegment.nfrm----------------->|
+													|<-----------------win_size-------------->|
+													|<----trailer---->|
+																	  |<--leader->|
+	-------------------------------------------------------------------------------------------------------------------------
+	|-sil-|voice|voice|voice|-sil-|voice|voice|voice|-sil-|voice|voice|voice|voice|voice|voice|-sil-|-sil-|-sil-|-sil-| ... |
+	-------------------------------------------------------------------------------------------------------------------------
+	  ^																			  ^			  ^
+		  |																		  |			  |
+		spseg																  new window	current
+		start																	start		analysis
+		frame																	frame		 frame
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
