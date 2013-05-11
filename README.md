@@ -50,7 +50,7 @@ Staying there and add this frame to segment
 	-------------------------------------------------------------------------------------------------------------------------
 	|-sil-|voice|voice|voice|-sil-|voice|voice|voice|-sil-|voice|voice|voice|voice|voice|voice|-sil-|-sil-|-sil-|-sil-| ... |
 	-------------------------------------------------------------------------------------------------------------------------
-	  ^																			  ^			  ^
+		  ^																			  ^			  ^
 		  |																		  |			  |
 		spseg																  new window	current
 		start																	start		analysis
