@@ -2,8 +2,38 @@
 
 ## Voice Activity Dectection module
 
+### Compute frame power
+Pre-emphasis done to remove low-frequency noise
+
+	x[i] = x[i] - x[i-1];
+
+compute power
+	
+	power = 20 * log10( sqrt ( sum_square / n_samps) )
+	
+code
+	:::java
+		for (int i = 0; i < spf; i++){
+			x[i] = x[i] - x[i-1];
+			sum += v * v;
+		}
+		
+		// trim lower bound
+		if (sum < spf) sum = spf;
+		
+		power = (int) ((10.0 * (Math.log10(sumsq) - Math.log10((double) spf))) + 0.5);
+		
+		// trim lower bound again
+		if (power < 0) power = 0;
+		
+		return power;
+
+### Calibrate audio input source
+
+
+
 ### Circular buffer
-To maintain data read util consumed.
+To maintain data read until consumed.
 
 	|<----------------------------------------------------Buffer size------------------------------------------------------>|
 							|<----------n_sample--------->|
