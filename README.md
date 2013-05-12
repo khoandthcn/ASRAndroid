@@ -62,8 +62,10 @@ Construct power histogram:
 	|				 min				  with				   max
 	|				noise			   power = 6			  noise
 	|----------------------------------------------------------------------------------------------------------------------->
-	+  0  +  1  +  2  +  3  +  4  +  5  +  6  +  7  +  8  +  9  +  10 +  11 +  12 +  13 +  14 +  15 + ... +     + max + power
+	+  0  +  1  +  2  +  3  +  4  +  5  + 6(A)+  7  +  8  +  9  +  10 +  11 +  12 +  13 +  14 +  15 + ... +     + max + power(dB)
 
+Find thresold = power index that has largest number of frames in range (20dB from min power signal- A+20). For the example above
+ the thresold is 6 (9 frames in range 6 + 20dB that have power is 6dB)
 	
 ### Circular buffer
 To maintain data read until consumed.
