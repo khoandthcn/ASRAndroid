@@ -65,6 +65,8 @@ public class VoiceActivityDectector implements Runnable {
 	/* Maximum background noise level */
 	public static int DEFAULT_MAX_NOISE = 70;
 
+	public static int HISTOGRAM_INERTIA = 3;
+
 	/* Analysis window for state transitions */
 	/* rkm had 16 */
 	public static int WINDOW_SIZE = 21;
@@ -140,6 +142,7 @@ public class VoiceActivityDectector implements Runnable {
 							 * is a 32-bit integer; applications should guard
 							 * against overflow.
 							 */
+	protected int seglen;
 	protected int siglvl; /*
 						 * Max signal level for the data consumed by the most
 						 * recent cont_ad_read call (dB range: 0-99). Can be
@@ -256,7 +259,7 @@ public class VoiceActivityDectector implements Runnable {
 		this.frm_pow = new int[FRAME_SIZE];
 		this.state = State.STATE_SIL;
 		this.read_ts = 0;
-		// this.seglen = 0;
+		this.seglen = 0;
 		this.siglvl = 0;
 		this.prev_sample = 0;
 		this.tot_frm = 0;
@@ -311,17 +314,215 @@ public class VoiceActivityDectector implements Runnable {
 	/**
 	 * Read as much as possible read data into adbuf;
 	 * */
+	/**
+	 * @return
+	 */
+	/**
+	 * @return
+	 */
 	private int readBlock() {
-		short[] buf = new short[this.block_size];
-		int nshorts = this.rec.read(buf, 0, buf.length);
-		if (nshorts > 0) {
-			// ShortTimeEnergyActivity.logD(getClass().getName(), "Posting "
-			// + nshorts + " samples to queue");
-			/* @buf should be processed before adding to audioQueue */
+		// short[] buf = new short[this.block_size];
+		// int nshorts = this.rec.read(buf, 0, buf.length);
+		// if (nshorts > 0) {
+		// this.audioQueue.add(buf);
+		// }
+		// return nshorts;
+		int max = this.block_size;
+		int len, flen, retval;
+		SpeechSegment seg;
+		State newstate;
 
-			// this.audioQueue.add(buf);
+		/* Read data from audio device to adbuf */
+		len = read_internal(); // new data coming to adbuf with length len
+
+		/*
+		 * Compute frame power for unprocessed+new data and find speech/silence
+		 * boundaries
+		 */
+		classify(len);
+
+		if (this.done) {
+			if (this.tail_state == State.STATE_SPEECH) {
+				assert (this.spseg_tail != null);
+
+				assert ((this.win_validfrm >= 0) && (this.win_validfrm < this.winsize));
+
+				this.spseg_tail.nfrm += this.win_validfrm;
+
+				this.tail_state = State.STATE_SIL;
+			}
+
+			this.win_startfrm += this.win_validfrm;
+
+			if (this.win_startfrm >= FRAME_SIZE) {
+				this.win_startfrm -= FRAME_SIZE;
+			}
+			this.win_validfrm = 0;
+			this.n_other = 0;
 		}
-		return nshorts;
+
+		seg = this.spseg_head;
+
+		if (seg == null || this.headfrm != seg.startfrm) {
+			if (seg == null) {
+				assert (this.tail_state == State.STATE_SIL);
+				flen = (this.done) ? this.n_frm : (this.n_frm - (this.winsize
+						+ this.leader - 1));
+				if (flen < 0) {
+					flen = 0;
+				}
+			} else {
+				flen = seg.startfrm - this.headfrm;
+				if (flen < 0) {
+					flen += FRAME_SIZE;
+				}
+			}
+
+			// raw mode is not implemented
+
+			newstate = State.STATE_SIL;
+		} else {
+			flen = max / this.spf;
+			if (flen > seg.nfrm) {
+				flen = seg.nfrm;
+			}
+
+			newstate = State.STATE_SPEECH;
+		}
+
+		len = flen * this.spf;
+
+		this.siglvl = max_siglvl(this.headfrm, flen);
+
+		if (newstate == State.STATE_SIL) {
+			this.headfrm += flen;
+			if (this.headfrm >= FRAME_SIZE) {
+				this.headfrm -= FRAME_SIZE;
+			}
+
+			retval = 0;
+		} else {
+			this.headfrm = buf_copy(this.headfrm, flen);
+			retval = len;
+		}
+
+		this.n_frm -= flen;
+		this.n_sample -= len;
+
+		assert ((this.n_frm >= 0) && this.n_sample >= 0);
+		assert (this.win_validfrm <= this.n_frm);
+
+		if (this.state == newstate) {
+			this.seglen += len;
+		} else {
+			this.seglen = len;
+		}
+		this.state = newstate;
+
+		if (newstate == State.STATE_SPEECH) {
+			seg.startfrm = this.headfrm;
+			assert (seg.startfrm >= 0);
+			seg.nfrm -= flen;
+
+			if ((seg.nfrm == 0)
+					&& (seg.next != null || (this.tail_state == State.STATE_SIL))) {
+				this.spseg_head = seg.next;
+				if (seg.next == null) {
+					this.spseg_tail = null;
+				}
+			}
+		}
+
+		/* Update timestamp. Total raw A/D read - those remaining to be consumed */
+		this.read_ts = (this.tot_frm - this.n_frm) * this.spf;
+
+		if (retval == 0) {
+			retval = (this.done && (this.spseg_head == null)) ? -1 : 0;
+		}
+
+		return retval;
+	}
+
+	/**
+	 * copy data from an array to another array, using System.arraycopy() for
+	 * best performance
+	 * */
+	private int buf_copy(int sf, int nf) {
+		int f, l;
+		short[] data = new short[nf];
+		int dstPos = 0;
+
+		assert ((sf >= 0) && (sf < FRAME_SIZE));
+		assert (nf >= 0);
+
+		if (sf + nf > FRAME_SIZE) {
+			f = FRAME_SIZE - sf;
+			l = f * this.spf;
+			System.arraycopy(this.adbuf, sf * this.spf, data, dstPos, l);
+			dstPos += l;
+			sf = 0;
+			nf -= f;
+		}
+		if (nf > 0) {
+			l = (nf * this.spf);
+			System.arraycopy(this.adbuf, sf * this.spf, data, dstPos, l);
+		}
+		
+		this.audioQueue.add(data);
+
+		if ((sf + nf) >= FRAME_SIZE) {
+			assert ((sf + nf) == FRAME_SIZE);
+			return 0;
+		} else {
+			return (sf + nf);
+		}
+	}
+
+	private int max_siglvl(int headfrm, int flen) {
+		return -1;
+	}
+
+	private int read_internal() {
+		int head, tail, len, l = 0;
+
+		/*
+		 * Try to copy all data in buf to adbuf
+		 */
+		head = this.headfrm * this.spf;
+		tail = head + this.n_sample;
+		len = this.n_sample - (this.n_frm * this.spf);// sample unconsumed
+		assert (len >= 0 && len < this.spf);
+
+		if (tail < this.adbufsize && !this.done) {
+			if (this.rec != null) {
+				if ((l = this.rec.read(this.adbuf, tail, this.adbufsize - tail)) < 0) {
+					// read fail
+					this.done = true;
+					l = 0;
+				}
+			}
+			tail += l;
+			len += l;
+			this.n_sample += l;
+		}
+
+		if (tail >= this.adbufsize && !this.done) {
+			tail -= this.adbufsize;
+			if (tail < head) {
+				if (this.rec != null) {
+					if ((l = this.rec.read(this.adbuf, tail, head - tail)) < 0) {
+						// read fail
+						this.done = true;
+						l = 0;
+					}
+				}
+			}
+			tail += l;
+			len += l;
+			this.n_sample += l;
+		}
+
+		return len;
 	}
 
 	private int frame_pow(int start_s, int prev_s, int spf) {
@@ -466,16 +667,54 @@ public class VoiceActivityDectector implements Runnable {
 		// log
 		log("noise_level: " + old_noise_level + " => " + this.noise_level);
 		log("threshold_sil: " + old_thresh_sil + " => " + this.thresh_sil);
-		log("threshold_speech: " + old_thresh_speech + " => " + this.thresh_speech);
-		
+		log("threshold_speech: " + old_thresh_speech + " => "
+				+ this.thresh_speech);
+
 		return true;
 	}
 
+	private void decay_hist() {
+		for (int i = 0; i < POWER_HISTOGRAM_SIZE; i++) {
+			this.pow_hist[i] -= (this.pow_hist[i] >> HISTOGRAM_INERTIA);// ??
+		}
+	}
+
 	/**
-	 * @param Break
+	 * @param length
 	 *            read data into frame and update threshold
 	 * */
-	private void classify() {
+	private State classify(int len) {
+		int tailfrm;
+
+		tailfrm = this.headfrm + this.n_frm; /* Next free frame slot to be filled */
+		if (tailfrm >= FRAME_SIZE) {
+			tailfrm -= FRAME_SIZE;
+		}
+
+		for (; len >= this.spf; len -= this.spf) {
+			compute_frame_pow(tailfrm);
+			this.n_frm++;
+			this.tot_frm++;
+
+			boundaryDetect(tailfrm);
+
+			if (++tailfrm >= FRAME_SIZE) {
+				tailfrm = 0;
+			}
+
+			/* Update threshold if time to do so */
+			if (this.thresh_update <= 0) {
+				int i, f;
+
+				find_thresh();
+				decay_hist();
+				this.thresh_update = THRESHOLD_UPDATE;
+
+				/* Since threshold has been updated, recompute n_other */
+			}
+		}
+
+		return this.tail_state;
 	}
 
 	/**
@@ -484,14 +723,123 @@ public class VoiceActivityDectector implements Runnable {
 	 *            Start to process on each analysis frame when it reach full
 	 *            analysis window size
 	 * */
-	private void boundaryDetect(int frameIndex) {
+	private void boundaryDetect(int frm) {
+		assert (this.n_other >= 0);
+
+		this.win_validfrm++;
+		if (this.tail_state == State.STATE_SIL) {
+			if (this.frm_pow[frm] >= this.thresh_speech) {
+				this.n_other++;
+			}
+		} else {
+			if (this.frm_pow[frm] <= this.thresh_sil) {
+				this.n_other++;
+			}
+		}
+
+		/* Not reached full analysis window size */
+		if (this.win_validfrm < this.winsize) {
+			return;
+		}
+
+		assert (this.win_validfrm == this.winsize);
+
+		if (this.tail_state == State.STATE_SIL) {
+			if (this.n_frm >= this.winsize + this.leader
+					&& this.n_other >= this.speech_onset) {
+				sil2speech_transition(frm);
+			}
+		} else {
+			if (this.n_other >= this.sil_onset) {
+				speech2sil_transition(frm);
+			} else {
+				/* In speech state, and staying there; add this frame to segment */
+				this.spseg_tail.nfrm++;
+			}
+		}
+
+		/*
+		 * Get rid of oldest frame in analysis window. Not quite correct;
+		 * thresholds could have changed over the window; should preserve the
+		 * original speech/silence label for the frame and undo it. Later..
+		 */
+		if (this.tail_state == State.STATE_SIL) {
+			if (this.frm_pow[this.win_startfrm] >= this.thresh_speech) {
+				if (this.n_other > 0) {
+					this.n_other--;
+				}
+			}
+		} else {
+			if (this.frm_pow[this.win_startfrm] <= this.thresh_sil) {
+				if (this.n_other > 0) {
+					this.n_other--;
+				}
+			}
+		}
+		this.win_validfrm--;
+		this.win_startfrm++;
+		if (this.win_startfrm >= FRAME_SIZE) {
+			this.win_startfrm = 0;
+		}
 	}
 
-	/**
-	 * copy data from an array to another array, using System.arraycopy() for
-	 * best performance
-	 * */
-	private void buf_copy() {
+	private void sil2speech_transition(int frm) {
+		SpeechSegment seg = new SpeechSegment();
+		seg.startfrm = this.win_startfrm - this.leader;
+		if (seg.startfrm < 0) {
+			seg.startfrm += FRAME_SIZE;
+		}
+		seg.nfrm = this.leader + this.winsize;
+		seg.next = null;
+
+		if (this.spseg_head == null) {
+			this.spseg_head = seg;
+		} else {
+			this.spseg_tail.next = seg;
+		}
+		this.spseg_tail = seg;
+		this.tail_state = State.STATE_SPEECH;
+
+		/* Now in SPEECH state; want to look for silence from end of this window */
+		this.win_validfrm = 1;
+		this.win_startfrm = frm;
+
+		/* Count #sil frames remaining in reduced window (of 1 frame) */
+		this.n_other = (this.frm_pow[frm] <= this.thresh_sil) ? 1 : 0;
+	}
+
+	private void speech2sil_transition(int frm) {
+		int f;
+
+		/* End of speech detected; speech->sil transition */
+		this.spseg_tail.nfrm += this.trailer;
+
+		this.tail_state = State.STATE_SIL;
+
+		/*
+		 * Now in SILENCE state; start looking for speech trailer+leader frames
+		 * later
+		 */
+		this.win_validfrm -= (this.trailer + this.leader - 1);
+		this.win_startfrm += (this.trailer + this.leader - 1);
+		if (this.win_startfrm >= FRAME_SIZE) {
+			this.win_startfrm -= FRAME_SIZE;
+		}
+
+		/* Count #speech frames remaining in reduced window */
+		this.n_other = 0;
+		for (f = this.win_startfrm;;) {
+			if (this.frm_pow[f] >= this.thresh_speech) {
+				this.n_other++;
+			}
+			if (f == frm) {
+				break;
+			}
+			f++;
+			if (f >= FRAME_SIZE) {
+				f = 0;
+			}
+		}
 	}
 
 	private void log(String message) {
