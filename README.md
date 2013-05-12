@@ -66,16 +66,16 @@ Construct power histogram:
 
 Find thresold = power index that has largest number of frames in range (20dB from min power signal- A+20). For the example above
  the thresold is 6 (9 frames in range 6 + 20dB that have power is 6dB)
-	
+
 ### Circular buffer
 To maintain data read until consumed.
 
 	|<----------------------------------------------------Buffer size------------------------------------------------------>|
 							|<----------n_sample--------->|
 	-------------------------------------------------------------------------------------------------------------------------
-	| n-3 | n-2 | n-1 |  n  |++0++|++1++|++2++|++3++|++4++|  5  |  6  |  7  |  8  |  9  | ... | n-8 | n-7 | n-6 | n-5 | n-4 |
+	| null| null| null| null| sam | sam | sam | sam | sam | null| null| null| null| null| ... | null| null| null| null| null|
 	-------------------------------------------------------------------------------------------------------------------------
-							^							  ^
+	  n-3   n-2   n-1    n  ^  0     1     2     3     4  ^  5     6     7     8     9    ...   n-8   n-7   n-6   n-5   n-4  
 							|							  |
 						  head							 tail
 						 frame							frame
