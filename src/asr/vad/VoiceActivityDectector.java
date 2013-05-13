@@ -245,6 +245,7 @@ public class VoiceActivityDectector implements Runnable {
 
 	private void initialize(LinkedBlockingQueue<short[]> q, int block_size) {
 		this.audioQueue = q;
+		this.done = false;
 		this.block_size = block_size;
 		this.rec = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,
 				SAMPLING_RATE, 1, AudioFormat.ENCODING_PCM_16BIT,
@@ -295,16 +296,23 @@ public class VoiceActivityDectector implements Runnable {
 		this.rec.startRecording();
 		// do calibrating here
 		if (!calibrate()) {
-			ShortTimeEnergyActivity.logD(getClass().getName(),
-					"Calibration failure !");
+			log("Calibration failure !");
 			// release resources
+			this.rec.stop();
+			this.rec.release();
+			return;
 		}
+		log("READY ...");
 
 		// start recording
 		while (!this.done) {
 			int nshorts = this.readBlock();
-			if (nshorts <= 0) {
+			if (nshorts < 0) {
 				break;
+			} else if (nshorts == 0) {
+				log("==silence==");
+			} else {
+				log("read " + nshorts + " samples");
 			}
 		}
 		this.rec.stop();
@@ -334,7 +342,6 @@ public class VoiceActivityDectector implements Runnable {
 
 		/* Read data from audio device to adbuf */
 		len = read_internal(); // new data coming to adbuf with length len
-
 		/*
 		 * Compute frame power for unprocessed+new data and find speech/silence
 		 * boundaries
@@ -449,7 +456,7 @@ public class VoiceActivityDectector implements Runnable {
 	 * */
 	private int buf_copy(int sf, int nf) {
 		int f, l;
-		short[] data = new short[nf];
+		short[] data = new short[nf * this.spf];
 		int dstPos = 0;
 
 		assert ((sf >= 0) && (sf < FRAME_SIZE));
@@ -467,9 +474,8 @@ public class VoiceActivityDectector implements Runnable {
 			l = (nf * this.spf);
 			System.arraycopy(this.adbuf, sf * this.spf, data, dstPos, l);
 		}
-		
-		this.audioQueue.add(data);
 
+		this.audioQueue.add(data);
 		if ((sf + nf) >= FRAME_SIZE) {
 			assert ((sf + nf) == FRAME_SIZE);
 			return 0;
@@ -478,8 +484,23 @@ public class VoiceActivityDectector implements Runnable {
 		}
 	}
 
-	private int max_siglvl(int headfrm, int flen) {
-		return -1;
+	private int max_siglvl(int startfrm, int nfrm) {
+		int siglvl;
+
+		siglvl = 0;
+
+		if (nfrm > 0) {
+			for (int i = 0, f = startfrm; i < nfrm; i++, f++) {
+				if (f >= FRAME_SIZE) {
+					f -= FRAME_SIZE;
+				}
+				if (this.frm_pow[f] > siglvl) {
+					siglvl = this.frm_pow[f];
+				}
+			}
+		}
+
+		return siglvl;
 	}
 
 	private int read_internal() {
@@ -665,10 +686,10 @@ public class VoiceActivityDectector implements Runnable {
 		this.thresh_speech = this.noise_level + this.delta_speech;
 
 		// log
-		log("noise_level: " + old_noise_level + " => " + this.noise_level);
-		log("threshold_sil: " + old_thresh_sil + " => " + this.thresh_sil);
-		log("threshold_speech: " + old_thresh_speech + " => "
-				+ this.thresh_speech);
+		// log("noise_level: " + old_noise_level + " => " + this.noise_level);
+		// log("threshold_sil: " + old_thresh_sil + " => " + this.thresh_sil);
+		// log("threshold_speech: " + old_thresh_speech + " => "
+		// + this.thresh_speech);
 
 		return true;
 	}
@@ -704,13 +725,34 @@ public class VoiceActivityDectector implements Runnable {
 
 			/* Update threshold if time to do so */
 			if (this.thresh_update <= 0) {
-				int i, f;
 
 				find_thresh();
 				decay_hist();
 				this.thresh_update = THRESHOLD_UPDATE;
 
 				/* Since threshold has been updated, recompute n_other */
+				this.n_other = 0;
+				if (this.tail_state == State.STATE_SIL) {
+					for (int i = this.win_validfrm, f = this.win_startfrm; i > 0; --i) {
+						if (this.frm_pow[f] >= this.thresh_speech) {
+							this.n_other++;
+						}
+						f++;
+						if (f >= FRAME_SIZE) {
+							f = 0;
+						}
+					}
+				} else {
+					for (int i = this.win_validfrm, f = this.win_startfrm; i > 0; --i) {
+						if (this.frm_pow[f] <= this.thresh_sil) {
+							this.n_other++;
+						}
+						f++;
+						if (f >= FRAME_SIZE) {
+							f = 0;
+						}
+					}
+				}
 			}
 		}
 

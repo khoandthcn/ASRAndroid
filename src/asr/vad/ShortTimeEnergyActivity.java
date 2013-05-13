@@ -34,7 +34,7 @@ public class ShortTimeEnergyActivity extends Activity {
 	}
 
 	public static void logD(String tag, String msg) {
-		final String ftag = tag;
+		final String ftag = tag.substring(tag.lastIndexOf('.'));
 		final String fmsg = msg;
 		tv.post(new Runnable() {
 			public void run() {

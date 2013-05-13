@@ -210,8 +210,8 @@ public class RecognizerTask implements Runnable {
 				try {
 					// This should be called from cont_ad
 					short[] buf = this.audioq.take();
-					ShortTimeEnergyActivity.logD(getClass().getName(),
-							"Reading " + buf.length + " samples from queue");
+					//ShortTimeEnergyActivity.logD(getClass().getName(),
+					//		"Reading " + buf.length + " samples from queue");
 
 					// this.ps.processRaw(buf, buf.length, false, false);
 					// Hypothesis hyp = this.ps.getHyp();
