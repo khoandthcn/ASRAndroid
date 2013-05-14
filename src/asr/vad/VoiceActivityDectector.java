@@ -291,6 +291,10 @@ public class VoiceActivityDectector implements Runnable {
 		this.done = true;
 	}
 
+	public int getNoneSpeechRead() {
+		return this.read_ts;
+	}
+
 	@Override
 	public void run() {
 		this.rec.startRecording();
@@ -302,16 +306,13 @@ public class VoiceActivityDectector implements Runnable {
 			this.rec.release();
 			return;
 		}
-		log("READY ...");
 
 		// start recording
 		while (!this.done) {
 			int nshorts = this.readBlock();
 			if (nshorts < 0) {
 				break;
-			} else if (nshorts == 0) {
-				log("==silence==");
-			} else {
+			} else if (nshorts > 0) {
 				log("read " + nshorts + " samples");
 			}
 		}

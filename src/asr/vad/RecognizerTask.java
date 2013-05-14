@@ -9,8 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * the form of a long-running task which accepts requests to start and stop
  * listening, and emits recognition results to a listener.
  * 
- * @author khoand <khoa.nd.thcn@gmail.com>
- * modified 
+ * @author khoand <khoa.nd.thcn@gmail.com> modified
  * 
  * @author David Huggins-Daines <dhuggins@cs.cmu.edu>
  */
@@ -38,7 +37,7 @@ public class RecognizerTask implements Runnable {
 	 * State of the main loop.
 	 */
 	protected enum State {
-		IDLE, LISTENING
+		IDLE, READY, LISTENING, STOP_LISTENING
 	};
 
 	/**
@@ -88,6 +87,7 @@ public class RecognizerTask implements Runnable {
 		State state = State.IDLE;
 		/* Previous partial hypothesis. */
 		/* String partial_hyp = null; */
+		int ts = 0;
 
 		while (!done) {
 			/* Read the mail. */
@@ -97,17 +97,13 @@ public class RecognizerTask implements Runnable {
 				/* If we're idle then wait for something to happen. */
 				if (state == State.IDLE && todo == Event.NONE) {
 					try {
-						ShortTimeEnergyActivity.logD(getClass().getName(),
-								"waiting");
+						log("waiting");
 						this.mailbox.wait();
 						todo = this.mailbox;
-						ShortTimeEnergyActivity.logD(getClass().getName(),
-								"got" + todo);
+						log("got" + todo);
 					} catch (InterruptedException e) {
 						/* Quit main loop. */
-						ShortTimeEnergyActivity
-								.logE(getClass().getName(),
-										"Interrupted waiting for mailbox, shutting down");
+						logE("Interrupted waiting for mailbox, shutting down");
 						todo = Event.SHUTDOWN;
 					}
 				}
@@ -118,45 +114,38 @@ public class RecognizerTask implements Runnable {
 			switch (todo) {
 			case NONE:
 				if (state == State.IDLE)
-					ShortTimeEnergyActivity
-							.logE(getClass().getName(),
-									"Received NONE in mailbox when IDLE, threading error?");
+					logE("Received NONE in mailbox when IDLE, threading error?");
 				break;
 			case START:
 				if (state == State.IDLE) {
-					ShortTimeEnergyActivity.logD(getClass().getName(), "START");
+					log("START");
 					this.audio = new VoiceActivityDectector(this.audioq);
 					this.audio_thread = new Thread(this.audio);
 					// this.ps.startUtt();
 					this.audio_thread.start();
-					state = State.LISTENING;
+					state = State.READY;
+					log("READY ...");
 				} else
-					ShortTimeEnergyActivity.logE(getClass().getName(),
-							"Received START in mailbox when LISTENING");
+					logE("Received START in mailbox when LISTENING");
 				break;
 			case STOP:
 				if (state == State.IDLE)
-					ShortTimeEnergyActivity.logE(getClass().getName(),
-							"Received STOP in mailbox when IDLE");
+					logE("Received STOP in mailbox when IDLE");
 				else {
-					ShortTimeEnergyActivity.logD(getClass().getName(), "STOP");
+					log("STOP");
 					assert this.audio != null;
 					this.audio.stop();
 					try {
 						this.audio_thread.join();
 					} catch (InterruptedException e) {
-						ShortTimeEnergyActivity
-								.logE(getClass().getName(),
-										"Interrupted waiting for audio thread, shutting down");
+						logE("Interrupted waiting for audio thread, shutting down");
 						done = true;
 					}
 					/* Drain the audio queue. */
 					short[] buf;
 
 					while ((buf = this.audioq.poll()) != null) {
-						ShortTimeEnergyActivity
-								.logD(getClass().getName(), "Reading "
-										+ buf.length + " samples from queue"); //
+						log("Reading " + buf.length + " samples from queue"); //
 						// this.ps.processRaw(buf, buf.length, false, false);
 					}
 
@@ -183,7 +172,7 @@ public class RecognizerTask implements Runnable {
 				}
 				break;
 			case SHUTDOWN:
-				ShortTimeEnergyActivity.logD(getClass().getName(), "SHUTDOWN");
+				log("SHUTDOWN");
 				if (this.audio != null) {
 					this.audio.stop();
 					assert this.audio_thread != null;
@@ -204,68 +193,98 @@ public class RecognizerTask implements Runnable {
 			 * Do whatever's appropriate for the current state. Actually this
 			 * just means processing audio if possible.
 			 */
+			if (state == State.READY) {
+				assert this.audio != null;
+
+				short[] buf = this.audioq.poll();
+
+				if (buf != null) {
+					// process first block of speech
+					state = State.LISTENING;
+					ts = this.audio.getNoneSpeechRead();
+					log("LISTENING ...");
+				}
+			}
 			if (state == State.LISTENING) {
 
 				assert this.audio != null;
-				try {
-					// This should be called from cont_ad
-					short[] buf = this.audioq.take();
-					//ShortTimeEnergyActivity.logD(getClass().getName(),
-					//		"Reading " + buf.length + " samples from queue");
+				// try {
+				// This should be called from cont_ad
+				short[] buf = this.audioq.poll();
 
-					// this.ps.processRaw(buf, buf.length, false, false);
-					// Hypothesis hyp = this.ps.getHyp();
-					// if (hyp != null) {
-					// String hypstr = hyp.getHypstr();
-					// if (hypstr != partial_hyp) {
-					// ShortTimeEnergyActivity.logD(getClass().getName(),
-					// "Hypothesis: " + hyp.getHypstr());
-					// if (this.rl != null && hyp != null) {
-					// Bundle b = new Bundle();
-					// b.putString("hyp", hyp.getHypstr());
-					// this.rl.onPartialResults(b);
-					// }
-					// }
-					// partial_hyp = hypstr;
-					// }
-
-				} catch (InterruptedException e) {
-					ShortTimeEnergyActivity.logD(getClass().getName(),
-							"Interrupted in audioq.take");
+				if (buf == null) {
+					if ((this.audio.getNoneSpeechRead() - ts) > 16000) {
+						state = State.STOP_LISTENING;
+						log("STOP LISTENING.");
+					}
+				} else {
+					ts = this.audio.getNoneSpeechRead();
 				}
+				// ShortTimeEnergyActivity.logD(getClass().getName(),
+				// "Reading " + buf.length + " samples from queue");
 
+				// this.ps.processRaw(buf, buf.length, false, false);
+				// Hypothesis hyp = this.ps.getHyp();
+				// if (hyp != null) {
+				// String hypstr = hyp.getHypstr();
+				// if (hypstr != partial_hyp) {
+				// ShortTimeEnergyActivity.logD(getClass().getName(),
+				// "Hypothesis: " + hyp.getHypstr());
+				// if (this.rl != null && hyp != null) {
+				// Bundle b = new Bundle();
+				// b.putString("hyp", hyp.getHypstr());
+				// this.rl.onPartialResults(b);
+				// }
+				// }
+				// partial_hyp = hypstr;
+				// }
+
+				// } catch (InterruptedException e) {
+				// ShortTimeEnergyActivity.logD(getClass().getName(),
+				// "Interrupted in audioq.take");
+				// }
+
+			}
+
+			if (state == State.STOP_LISTENING) {
+				state = State.READY;
+				log("READY");
 			}
 		}
 	}
 
 	public void start() {
-		ShortTimeEnergyActivity.logD(getClass().getName(), "signalling START");
+		log("signalling START");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			ShortTimeEnergyActivity.logD(getClass().getName(),
-					"signalled START");
+			log("signalled START");
 			this.mailbox = Event.START;
 		}
 	}
 
 	public void stop() {
-		ShortTimeEnergyActivity.logD(getClass().getName(), "signalling STOP");
+		log("signalling STOP");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			ShortTimeEnergyActivity
-					.logD(getClass().getName(), "signalled STOP");
+			log("signalled STOP");
 			this.mailbox = Event.STOP;
 		}
 	}
 
 	public void shutdown() {
-		ShortTimeEnergyActivity.logD(getClass().getName(),
-				"signalling SHUTDOWN");
+		log("signalling SHUTDOWN");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			ShortTimeEnergyActivity.logD(getClass().getName(),
-					"signalled SHUTDOWN");
+			log("signalled SHUTDOWN");
 			this.mailbox = Event.SHUTDOWN;
 		}
+	}
+
+	private void log(String msg) {
+		ShortTimeEnergyActivity.logD(getClass().getName(), msg);
+	}
+
+	private void logE(String msg) {
+		ShortTimeEnergyActivity.logE(getClass().getName(), msg);
 	}
 }
