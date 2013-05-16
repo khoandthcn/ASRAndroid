@@ -2,16 +2,21 @@ package asr.vad;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 
 /*
  * The VoiceActivityDector class implement a VAD algorithm based on energy of speech signal
  * step:
  * 		- 
  * */
-public class VoiceActivityDectector implements Runnable {
+public class VoiceActivityDectector implements Runnable,
+		OnSharedPreferenceChangeListener {
 
 	class SpeechSegment {
 
@@ -114,7 +119,7 @@ public class VoiceActivityDectector implements Runnable {
 	protected AudioRecord rec;
 
 	protected boolean done; /* Should be combined with eof flag */
-	
+
 	protected boolean is_calibrate = false;
 
 	/**
@@ -286,6 +291,30 @@ public class VoiceActivityDectector implements Runnable {
 		this.spseg_tail = null;
 		this.n_calib_frame = 0;
 	}
+	
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+			String key) {
+		if (key.equalsIgnoreCase(VADSettingActivity.KEY_THRESHOLD_UPDATEE_PERIOD)) {
+			this.thresh_update = sharedPreferences
+					.getInt(key, THRESHOLD_UPDATE);
+		} else if (key.equalsIgnoreCase(VADSettingActivity.KEY_ADAPT_RATE)) {
+			this.adapt_rate = Double.parseDouble(sharedPreferences.getString(key, ADAPTED_RATE + ""));
+		} else if (key.equalsIgnoreCase(VADSettingActivity.KEY_NOISE_LEVEL)) {
+			
+			this.noise_level = sharedPreferences.getInt(key, DEFAULT_NOISE);
+		} else if (key.equalsIgnoreCase(VADSettingActivity.KEY_SIL_ON_SET)) {
+			this.sil_onset = sharedPreferences.getInt(key, DEFAULT_SIL_ONSET);
+		} else if (key.equalsIgnoreCase(VADSettingActivity.KEY_SPEECH_ON_SET)) {
+			this.speech_onset = sharedPreferences.getInt(key, DEFAULT_SPEECH_ONSET);
+		} else if (key.equals(VADSettingActivity.KEY_WINDOW_SIZE)) {
+			this.winsize = sharedPreferences.getInt(key, WINDOW_SIZE);
+		} else if (key.equalsIgnoreCase(VADSettingActivity.KEY_LEADER)) {
+			this.leader = sharedPreferences.getInt(key, LEADER);
+		} else if (key.equalsIgnoreCase(VADSettingActivity.KEY_TRAILER)) {
+			this.trailer = sharedPreferences.getInt(key, TRAILER);
+		}
+	}
 
 	public void stop() {
 		this.done = true;
@@ -297,16 +326,8 @@ public class VoiceActivityDectector implements Runnable {
 
 	@Override
 	public void run() {
-		//this.rec.startRecording();
-		// do calibrating here
-		//if (!calibrate_internal()) {
-		//	log("Calibration failure !");
-			// release resources
-		//	this.rec.stop();
-		//	this.rec.release();
-		//	return;
-		//}
-		if(!this.is_calibrate){
+
+		if (!this.is_calibrate) {
 			return;
 		}
 
@@ -322,16 +343,16 @@ public class VoiceActivityDectector implements Runnable {
 		this.rec.stop();
 		this.rec.release();
 	}
-	
-	public boolean calibrate(){
-		if(this.rec == null){
+
+	public boolean calibrate() {
+		if (this.rec == null) {
 			log("cannot open audio recording device !");
 			return false;
 		}
-		
+
 		this.rec.startRecording();
-		
-		if(!calibrate_internal()){
+
+		if (!calibrate_internal()) {
 			this.rec.stop();
 			this.rec.release();
 			this.is_calibrate = false;
@@ -380,12 +401,6 @@ public class VoiceActivityDectector implements Runnable {
 	/**
 	 * Read as much as possible read data into adbuf;
 	 * */
-	/**
-	 * @return
-	 */
-	/**
-	 * @return
-	 */
 	private int readBlock() {
 		// short[] buf = new short[this.block_size];
 		// int nshorts = this.rec.read(buf, 0, buf.length);
@@ -666,7 +681,7 @@ public class VoiceActivityDectector implements Runnable {
 
 	private boolean find_thresh() {
 		int i, max, j, th;
-		//int old_noise_level, old_thresh_sil, old_thresh_speech;
+		// int old_noise_level, old_thresh_sil, old_thresh_speech;
 
 		if (!this.auto_thresh) {
 			return true;
@@ -698,9 +713,9 @@ public class VoiceActivityDectector implements Runnable {
 		}
 
 		/* "Don't change the threshold too fast" */
-		//old_noise_level = this.noise_level;
-		//old_thresh_sil = this.thresh_sil;
-		//old_thresh_speech = this.thresh_speech;
+		// old_noise_level = this.noise_level;
+		// old_thresh_sil = this.thresh_sil;
+		// old_thresh_speech = this.thresh_speech;
 
 		this.noise_level = (int) (this.noise_level + this.adapt_rate
 				* (th - this.noise_level) + 0.5);
