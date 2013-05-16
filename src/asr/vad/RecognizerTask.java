@@ -37,7 +37,7 @@ public class RecognizerTask implements Runnable {
 	 * State of the main loop.
 	 */
 	protected enum State {
-		IDLE, READY, LISTENING, STOP_LISTENING
+		IDLE, CALIBRATION, READY, LISTENING, STOP_LISTENING
 	};
 
 	/**
@@ -97,10 +97,10 @@ public class RecognizerTask implements Runnable {
 				/* If we're idle then wait for something to happen. */
 				if (state == State.IDLE && todo == Event.NONE) {
 					try {
-						log("waiting");
+						logI("waiting");
 						this.mailbox.wait();
 						todo = this.mailbox;
-						log("got" + todo);
+						//log("got" + todo);
 					} catch (InterruptedException e) {
 						/* Quit main loop. */
 						logE("Interrupted waiting for mailbox, shutting down");
@@ -118,13 +118,11 @@ public class RecognizerTask implements Runnable {
 				break;
 			case START:
 				if (state == State.IDLE) {
-					log("START");
+					logI("START");
 					this.audio = new VoiceActivityDectector(this.audioq);
 					this.audio_thread = new Thread(this.audio);
 					// this.ps.startUtt();
-					this.audio_thread.start();
-					state = State.READY;
-					log("READY ...");
+					state = State.CALIBRATION;
 				} else
 					logE("Received START in mailbox when LISTENING");
 				break;
@@ -132,7 +130,7 @@ public class RecognizerTask implements Runnable {
 				if (state == State.IDLE)
 					logE("Received STOP in mailbox when IDLE");
 				else {
-					log("STOP");
+					logI("STOP");
 					assert this.audio != null;
 					this.audio.stop();
 					try {
@@ -145,7 +143,7 @@ public class RecognizerTask implements Runnable {
 					short[] buf;
 
 					while ((buf = this.audioq.poll()) != null) {
-						log("Reading " + buf.length + " samples from queue"); //
+						logD("Reading " + buf.length + " samples from queue"); //
 						// this.ps.processRaw(buf, buf.length, false, false);
 					}
 
@@ -172,7 +170,7 @@ public class RecognizerTask implements Runnable {
 				}
 				break;
 			case SHUTDOWN:
-				log("SHUTDOWN");
+				logI("SHUTDOWN");
 				if (this.audio != null) {
 					this.audio.stop();
 					assert this.audio_thread != null;
@@ -193,6 +191,16 @@ public class RecognizerTask implements Runnable {
 			 * Do whatever's appropriate for the current state. Actually this
 			 * just means processing audio if possible.
 			 */
+			if(state == State.CALIBRATION){
+				if (this.audio.calibrate()) {
+					this.audio_thread.start();
+					state = State.READY;
+					logI("READY ...");
+				} else {
+					logE("Calibration failed !");
+					stop();
+				}
+			}
 			if (state == State.READY) {
 				assert this.audio != null;
 
@@ -202,7 +210,7 @@ public class RecognizerTask implements Runnable {
 					// process first block of speech
 					state = State.LISTENING;
 					ts = this.audio.getNoneSpeechRead();
-					log("LISTENING ...");
+					logI("LISTENING ...");
 				}
 			}
 			if (state == State.LISTENING) {
@@ -215,7 +223,7 @@ public class RecognizerTask implements Runnable {
 				if (buf == null) {
 					if ((this.audio.getNoneSpeechRead() - ts) > 16000) {
 						state = State.STOP_LISTENING;
-						log("STOP LISTENING.");
+						logI("STOP LISTENING.");
 					}
 				} else {
 					ts = this.audio.getNoneSpeechRead();
@@ -248,39 +256,43 @@ public class RecognizerTask implements Runnable {
 
 			if (state == State.STOP_LISTENING) {
 				state = State.READY;
-				log("READY");
+				logI("READY ...");
 			}
 		}
 	}
 
 	public void start() {
-		log("signalling START");
+		//log("signalling START");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			log("signalled START");
+			//log("signalled START");
 			this.mailbox = Event.START;
 		}
 	}
 
 	public void stop() {
-		log("signalling STOP");
+		//log("signalling STOP");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			log("signalled STOP");
+			//log("signalled STOP");
 			this.mailbox = Event.STOP;
 		}
 	}
 
 	public void shutdown() {
-		log("signalling SHUTDOWN");
+		//log("signalling SHUTDOWN");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			log("signalled SHUTDOWN");
+			//log("signalled SHUTDOWN");
 			this.mailbox = Event.SHUTDOWN;
 		}
 	}
 
-	private void log(String msg) {
+	private void logI(String msg) {
+		ShortTimeEnergyActivity.logI(getClass().getName(), msg);
+	}
+
+	private void logD(String msg) {
 		ShortTimeEnergyActivity.logD(getClass().getName(), msg);
 	}
 

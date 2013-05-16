@@ -1,6 +1,5 @@
 package asr.vad;
 
-import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import android.media.AudioFormat;
@@ -115,6 +114,8 @@ public class VoiceActivityDectector implements Runnable {
 	protected AudioRecord rec;
 
 	protected boolean done; /* Should be combined with eof flag */
+	
+	protected boolean is_calibrate = false;
 
 	/**
 	 * Properties extended from cont_ad.h
@@ -225,8 +226,6 @@ public class VoiceActivityDectector implements Runnable {
 								 * far.
 								 */
 
-	private boolean DEBUG = true;
-
 	public VoiceActivityDectector() {
 		initialize(new LinkedBlockingQueue<short[]>(), DEFAULT_BLOCK_SIZE);
 	}
@@ -246,6 +245,7 @@ public class VoiceActivityDectector implements Runnable {
 	private void initialize(LinkedBlockingQueue<short[]> q, int block_size) {
 		this.audioQueue = q;
 		this.done = false;
+		this.is_calibrate = false;
 		this.block_size = block_size;
 		this.rec = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,
 				SAMPLING_RATE, 1, AudioFormat.ENCODING_PCM_16BIT,
@@ -297,13 +297,16 @@ public class VoiceActivityDectector implements Runnable {
 
 	@Override
 	public void run() {
-		this.rec.startRecording();
+		//this.rec.startRecording();
 		// do calibrating here
-		if (!calibrate()) {
-			log("Calibration failure !");
+		//if (!calibrate_internal()) {
+		//	log("Calibration failure !");
 			// release resources
-			this.rec.stop();
-			this.rec.release();
+		//	this.rec.stop();
+		//	this.rec.release();
+		//	return;
+		//}
+		if(!this.is_calibrate){
 			return;
 		}
 
@@ -318,6 +321,60 @@ public class VoiceActivityDectector implements Runnable {
 		}
 		this.rec.stop();
 		this.rec.release();
+	}
+	
+	public boolean calibrate(){
+		if(this.rec == null){
+			log("cannot open audio recording device !");
+			return false;
+		}
+		
+		this.rec.startRecording();
+		
+		if(!calibrate_internal()){
+			this.rec.stop();
+			this.rec.release();
+			this.is_calibrate = false;
+			return false;
+		} else {
+			this.is_calibrate = true;
+			return true;
+		}
+	}
+
+	private boolean calibrate_internal() {
+		int tailfrm, s, len, k;
+
+		// clear power histogram
+		for (int i = 0; i < POWER_HISTOGRAM_SIZE; i++) {
+			this.pow_hist[i] = 0;
+		}
+
+		tailfrm = this.headfrm + this.n_frm;
+
+		if (tailfrm >= FRAME_SIZE) {
+			tailfrm -= FRAME_SIZE;
+		}
+
+		s = tailfrm * this.spf; /* total of samples available in adbuf */
+
+		for (this.n_calib_frame = 0; this.n_calib_frame < CALIB_FRAMES; ++this.n_calib_frame) {
+			len = this.spf;
+
+			// Read len samples into adbuf
+			while (len > 0) {
+				if ((k = this.rec.read(this.adbuf, s, len)) < 0) {
+					return false; // Recording internal error
+				}
+				len -= k;
+				s += k;
+			}
+
+			s -= this.spf; // throws audio data read in calibrate phase
+			compute_frame_pow(tailfrm);
+		}
+		this.thresh_update = THRESHOLD_UPDATE;
+		return find_thresh();
 	}
 
 	/**
@@ -607,44 +664,9 @@ public class VoiceActivityDectector implements Runnable {
 		this.thresh_update--;
 	}
 
-	private boolean calibrate() {
-		int tailfrm, s, len, k;
-
-		// clear power histogram
-		for (int i = 0; i < POWER_HISTOGRAM_SIZE; i++) {
-			this.pow_hist[i] = 0;
-		}
-
-		tailfrm = this.headfrm + this.n_frm;
-
-		if (tailfrm >= FRAME_SIZE) {
-			tailfrm -= FRAME_SIZE;
-		}
-
-		s = tailfrm * this.spf; /* total of samples available in adbuf */
-
-		for (this.n_calib_frame = 0; this.n_calib_frame < CALIB_FRAMES; ++this.n_calib_frame) {
-			len = this.spf;
-
-			// Read len samples into adbuf
-			while (len > 0) {
-				if ((k = this.rec.read(this.adbuf, s, len)) < 0) {
-					return false; // Recording internal error
-				}
-				len -= k;
-				s += k;
-			}
-
-			s -= this.spf; // throws audio data read in calibrate phase
-			compute_frame_pow(tailfrm);
-		}
-		this.thresh_update = THRESHOLD_UPDATE;
-		return find_thresh();
-	}
-
 	private boolean find_thresh() {
 		int i, max, j, th;
-		int old_noise_level, old_thresh_sil, old_thresh_speech;
+		//int old_noise_level, old_thresh_sil, old_thresh_speech;
 
 		if (!this.auto_thresh) {
 			return true;
@@ -676,9 +698,9 @@ public class VoiceActivityDectector implements Runnable {
 		}
 
 		/* "Don't change the threshold too fast" */
-		old_noise_level = this.noise_level;
-		old_thresh_sil = this.thresh_sil;
-		old_thresh_speech = this.thresh_speech;
+		//old_noise_level = this.noise_level;
+		//old_thresh_sil = this.thresh_sil;
+		//old_thresh_speech = this.thresh_speech;
 
 		this.noise_level = (int) (this.noise_level + this.adapt_rate
 				* (th - this.noise_level) + 0.5);
