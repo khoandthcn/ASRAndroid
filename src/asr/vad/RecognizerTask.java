@@ -100,7 +100,7 @@ public class RecognizerTask implements Runnable {
 						logI("waiting");
 						this.mailbox.wait();
 						todo = this.mailbox;
-						//log("got" + todo);
+						// log("got" + todo);
 					} catch (InterruptedException e) {
 						/* Quit main loop. */
 						logE("Interrupted waiting for mailbox, shutting down");
@@ -191,7 +191,7 @@ public class RecognizerTask implements Runnable {
 			 * Do whatever's appropriate for the current state. Actually this
 			 * just means processing audio if possible.
 			 */
-			if(state == State.CALIBRATION){
+			if (state == State.CALIBRATION) {
 				if (this.audio.calibrate()) {
 					this.audio_thread.start();
 					state = State.READY;
@@ -207,7 +207,8 @@ public class RecognizerTask implements Runnable {
 				short[] buf = this.audioq.poll();
 
 				if (buf != null) {
-					// process first block of speech
+					// process first block of speech, start new utterance
+
 					state = State.LISTENING;
 					ts = this.audio.getNoneSpeechRead();
 					logI("LISTENING ...");
@@ -262,28 +263,28 @@ public class RecognizerTask implements Runnable {
 	}
 
 	public void start() {
-		//log("signalling START");
+		// log("signalling START");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			//log("signalled START");
+			// log("signalled START");
 			this.mailbox = Event.START;
 		}
 	}
 
 	public void stop() {
-		//log("signalling STOP");
+		// log("signalling STOP");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			//log("signalled STOP");
+			// log("signalled STOP");
 			this.mailbox = Event.STOP;
 		}
 	}
 
 	public void shutdown() {
-		//log("signalling SHUTDOWN");
+		// log("signalling SHUTDOWN");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			//log("signalled SHUTDOWN");
+			// log("signalled SHUTDOWN");
 			this.mailbox = Event.SHUTDOWN;
 		}
 	}
