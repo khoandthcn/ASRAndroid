@@ -28,9 +28,9 @@ public class ShortTimeEnergyActivity extends Activity {
 		tv = (TextView) findViewById(R.id.textView);
 		scrollview = (ScrollView) findViewById(R.id.scrollview);
 
-		this.rec = new RecognizerTask();
-		this.rec_thread = new Thread(this.rec);
-		new LoadRecognizerTask().execute();
+		// this.rec = new RecognizerTask();
+		// this.rec_thread = new Thread(this.rec);
+		// new LoadRecognizerTask().execute();
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public class ShortTimeEnergyActivity extends Activity {
 	@Override
 	public void onPause() {
 		super.onPause();
-//		this.rec.stop();
+		// this.rec.stop();
 	}
 
 	@Override
@@ -63,8 +63,8 @@ public class ShortTimeEnergyActivity extends Activity {
 	}
 
 	public void speakBtn_click(View v) {
-		//this.rec.start();
-		
+		// this.rec.start();
+
 		// start service
 		Intent i = new Intent(getApplicationContext(), MyService.class);
 		i.putExtra("KEY1", "Value to be use by service");
@@ -94,7 +94,7 @@ public class ShortTimeEnergyActivity extends Activity {
 				// + fmsg + "\n" + ShortTimeEnergyActivity.tv.getText());
 				ShortTimeEnergyActivity.tv.append("[ERROR] " + ftag + ": "
 						+ fmsg + "\n");
-				scrollview.smoothScrollTo(0, tv.getBottom()); 
+				scrollview.smoothScrollTo(0, tv.getBottom());
 			}
 		});
 	}
@@ -104,8 +104,8 @@ public class ShortTimeEnergyActivity extends Activity {
 		final String fmsg = msg;
 		tv.post(new Runnable() {
 			public void run() {
-				//ShortTimeEnergyActivity.tv.setText("[INFO] " + ftag + ": "
-				//		+ fmsg + "\n" + ShortTimeEnergyActivity.tv.getText());
+				// ShortTimeEnergyActivity.tv.setText("[INFO] " + ftag + ": "
+				// + fmsg + "\n" + ShortTimeEnergyActivity.tv.getText());
 				ShortTimeEnergyActivity.tv.append("[INFO] " + ftag + ": "
 						+ fmsg + "\n");
 				scrollview.smoothScrollTo(0, tv.getBottom());

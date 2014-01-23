@@ -2,6 +2,8 @@ package asr.vad;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import android.app.Activity;
+import android.content.Context;
 import android.widget.Toast;
 
 /**
@@ -90,6 +92,8 @@ public class RecognizerTask implements Runnable {
 		/* Previous partial hypothesis. */
 		/* String partial_hyp = null; */
 		int ts = 0;
+
+		int utt_len = 0;
 
 		while (!done) {
 			/* Read the mail. */
@@ -214,9 +218,8 @@ public class RecognizerTask implements Runnable {
 					state = State.LISTENING;
 					ts = this.audio.getNoneSpeechRead();
 					logI("LISTENING ...");
-
-					Toast.makeText(null, "LISTENING ...",
-							Toast.LENGTH_SHORT).show();
+					rl.onSpeechStartpoint();
+					utt_len = buf.length;
 				}
 			}
 			if (state == State.LISTENING) {
@@ -230,33 +233,38 @@ public class RecognizerTask implements Runnable {
 					if ((this.audio.getNoneSpeechRead() - ts) > 16000) {
 						state = State.STOP_LISTENING;
 						logI("STOP LISTENING.");
+						rl.onSpeechEndpoint(utt_len);
+						utt_len = 0;
 					}
 				} else {
 					ts = this.audio.getNoneSpeechRead();
+					utt_len += buf.length;
+					// process next block of speech
+
+					// ShortTimeEnergyActivity.logD(getClass().getName(),
+					// "Reading " + buf.length + " samples from queue");
+
+					// this.ps.processRaw(buf, buf.length, false, false);
+					// Hypothesis hyp = this.ps.getHyp();
+					// if (hyp != null) {
+					// String hypstr = hyp.getHypstr();
+					// if (hypstr != partial_hyp) {
+					// ShortTimeEnergyActivity.logD(getClass().getName(),
+					// "Hypothesis: " + hyp.getHypstr());
+					// if (this.rl != null && hyp != null) {
+					// Bundle b = new Bundle();
+					// b.putString("hyp", hyp.getHypstr());
+					// this.rl.onPartialResults(b);
+					// }
+					// }
+					// partial_hyp = hypstr;
+					// }
+
+					// } catch (InterruptedException e) {
+					// ShortTimeEnergyActivity.logD(getClass().getName(),
+					// "Interrupted in audioq.take");
+					// }
 				}
-				// ShortTimeEnergyActivity.logD(getClass().getName(),
-				// "Reading " + buf.length + " samples from queue");
-
-				// this.ps.processRaw(buf, buf.length, false, false);
-				// Hypothesis hyp = this.ps.getHyp();
-				// if (hyp != null) {
-				// String hypstr = hyp.getHypstr();
-				// if (hypstr != partial_hyp) {
-				// ShortTimeEnergyActivity.logD(getClass().getName(),
-				// "Hypothesis: " + hyp.getHypstr());
-				// if (this.rl != null && hyp != null) {
-				// Bundle b = new Bundle();
-				// b.putString("hyp", hyp.getHypstr());
-				// this.rl.onPartialResults(b);
-				// }
-				// }
-				// partial_hyp = hypstr;
-				// }
-
-				// } catch (InterruptedException e) {
-				// ShortTimeEnergyActivity.logD(getClass().getName(),
-				// "Interrupted in audioq.take");
-				// }
 
 			}
 

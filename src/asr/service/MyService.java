@@ -3,9 +3,13 @@ package asr.service;
 import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.widget.Toast;
+import asr.vad.RecognitionListener;
 import asr.vad.RecognizerTask;
+import asr.vad.VoiceActivityDectector;
 
 public class MyService extends Service {
 
@@ -31,10 +35,75 @@ public class MyService extends Service {
 
 		Toast.makeText(this, "Vietnamese ASR service starting ...",
 				Toast.LENGTH_SHORT).show();
-		
+
 		this.rec = new RecognizerTask();
+		this.rec.setRecognitionListener(new RecognitionListener() {
+
+			@Override
+			public void onSpeechStartpoint() {
+				// TODO Auto-generated method stub
+				Handler h = new Handler(getApplicationContext().getMainLooper());
+				// Although you need to pass an appropriate context
+				h.post(new Runnable() {
+					@Override
+					public void run() {
+						Toast.makeText(getApplicationContext(),
+								"Utterance started ...", Toast.LENGTH_SHORT)
+								.show();
+					}
+				});
+
+			}
+
+			@Override
+			public void onSpeechEndpoint(int utteranceLength) {
+				// TODO Auto-generated method stub
+				Handler h = new Handler(getApplicationContext().getMainLooper());
+				// final int utt_len = utteranceLength;
+				final double utt_len = (double) utteranceLength
+						/ (double) VoiceActivityDectector.SAMPLING_RATE;
+				// Although you need to pass an appropriate context
+				h.post(new Runnable() {
+					@Override
+					public void run() {
+						Toast.makeText(
+								getApplicationContext(),
+								"Utterance stopped ["
+										+ String.format("%.2f", utt_len)
+										+ " seconds].", Toast.LENGTH_SHORT)
+								.show();
+					}
+				});
+
+			}
+
+			@Override
+			public void onResults(Bundle b) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void onPartialResults(Bundle b) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void onError(int err) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 		this.rec_thread = new Thread(this.rec);
 		new LoadRecognizerTask().execute();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.rec.start();
 
 		super.onCreate();
 	}
