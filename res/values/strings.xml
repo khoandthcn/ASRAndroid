@@ -19,4 +19,5 @@
     <string name="trailer_t">TRAILER</string>
     <string name="default_trailer">10</string>
     <string name="setting_t">Setting</string>
+    <string name="service_name">Vietnamese ASR Service</string>
 </resources>

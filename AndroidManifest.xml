@@ -31,6 +31,12 @@
 		    android:name="android.support.PARENT_ACTIVITY"
 		    android:value="asr.vad.ShortTimeEnergyActivity"/>
         </activity>
+    
+	    <service
+		  android:name="asr.service.MyService"
+		  android:icon="@drawable/ic_launcher"
+		  android:label="@string/service_name" >
+		</service>
     </application>
 
 </manifest>

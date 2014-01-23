@@ -2,6 +2,8 @@ package asr.vad;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import android.widget.Toast;
+
 /**
  * Speech recognition task, which runs in a worker thread.
  * 
@@ -212,6 +214,9 @@ public class RecognizerTask implements Runnable {
 					state = State.LISTENING;
 					ts = this.audio.getNoneSpeechRead();
 					logI("LISTENING ...");
+
+					Toast.makeText(null, "LISTENING ...",
+							Toast.LENGTH_SHORT).show();
 				}
 			}
 			if (state == State.LISTENING) {

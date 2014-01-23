@@ -10,6 +10,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.os.AsyncTask;
+import asr.service.MyService;
 import asr.vad.R;
 
 public class ShortTimeEnergyActivity extends Activity {
@@ -40,7 +41,7 @@ public class ShortTimeEnergyActivity extends Activity {
 	@Override
 	public void onPause() {
 		super.onPause();
-		this.rec.stop();
+//		this.rec.stop();
 	}
 
 	@Override
@@ -62,7 +63,12 @@ public class ShortTimeEnergyActivity extends Activity {
 	}
 
 	public void speakBtn_click(View v) {
-		this.rec.start();
+		//this.rec.start();
+		
+		// start service
+		Intent i = new Intent(getApplicationContext(), MyService.class);
+		i.putExtra("KEY1", "Value to be use by service");
+		getApplicationContext().startService(i);
 	}
 
 	public static void logD(String tag, String msg) {
