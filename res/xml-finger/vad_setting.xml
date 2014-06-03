@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <EditTextPreference
+        android:defaultValue="@string/default_threshold_update_period"
+        android:key="threshold_update_period"
+        android:numeric="integer"
+        android:title="@string/threshold_update_t" />
+    <EditTextPreference
+        android:defaultValue="@string/default_adapt_rate"
+        android:inputType="number"
+        android:key="adapt_rate"
+        android:title="@string/adapt_rate_t" />
+    <EditTextPreference
+        android:defaultValue="@string/default_noise_level"
+        android:key="noise_level"
+        android:numeric="integer"
+        android:title="@string/noise_level_t" />
+    <EditTextPreference
+        android:defaultValue="@string/default_window_size"
+        android:key="window_size"
+        android:numeric="integer"
+        android:title="@string/window_size_t" />
+    <EditTextPreference
+        android:defaultValue="@string/default_speech_on_set"
+        android:key="speech_on_set"
+        android:numeric="integer"
+        android:title="@string/speech_on_set_t" />
+    <EditTextPreference
+        android:defaultValue="@string/default_sil_on_set"
+        android:key="sil_on_set"
+        android:numeric="integer"
+        android:title="@string/sil_on_set_t" />
+    <EditTextPreference
+        android:defaultValue="@string/default_leader"
+        android:key="leader"
+        android:numeric="integer"
+        android:title="@string/leader_t" />
+    <EditTextPreference
+        android:defaultValue="@string/default_trailer"
+        android:key="trailer"
+        android:numeric="integer"
+        android:title="@string/trailer_t" />
+
+</PreferenceScreen>

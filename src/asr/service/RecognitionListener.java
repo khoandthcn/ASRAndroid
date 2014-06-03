@@ -1,4 +1,4 @@
-package asr.vad;
+package asr.service;
 
 import android.os.Bundle;
 
@@ -45,4 +45,8 @@ public interface RecognitionListener {
 	 *            Code representing the error that occurred.
 	 */
 	abstract void onError(int err);
+	
+	abstract void onSpeechStartpoint();
+	
+	abstract void onSpeechEndpoint(int utteranceLength);
 }

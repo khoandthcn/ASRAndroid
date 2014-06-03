@@ -26,6 +26,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="VADSettingActivity" android:label="Setting">
+            <meta-data
+		    android:name="android.support.PARENT_ACTIVITY"
+		    android:value="asr.vad.ShortTimeEnergyActivity"/>
+        </activity>
+    
+	    <service
+		  android:name="asr.service.VoiceRecognizeService"
+		  android:icon="@drawable/ic_launcher"
+		  android:label="@string/service_name" >
+		</service>
     </application>
 
 </manifest>
