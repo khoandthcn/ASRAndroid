@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ShortTimeEnergyActivity</string>
-    <string name="speakBtnLabel">Speak</string>
+    <string name="speakBtnStartLabel">Start Recognize service</string>
+    <string name="speakBtnStopLabel">Stop Recognize service</string>
     <string name="threshold_update_t">Threshold update period</string>
     <string name="default_threshold_update_period">100</string>
     <string name="adapt_rate_t">Adapt rate</string>

@@ -11,7 +11,7 @@ import asr.vad.RecognitionListener;
 import asr.vad.RecognizerTask;
 import asr.vad.VoiceActivityDectector;
 
-public class MyService extends Service {
+public class VoiceRecognizeService extends Service {
 
 	RecognizerTask rec;
 	Thread rec_thread;

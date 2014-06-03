@@ -33,7 +33,7 @@
         </activity>
     
 	    <service
-		  android:name="asr.service.MyService"
+		  android:name="asr.service.VoiceRecognizeService"
 		  android:icon="@drawable/ic_launcher"
 		  android:label="@string/service_name" >
 		</service>

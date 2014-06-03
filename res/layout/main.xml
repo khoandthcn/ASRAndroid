@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:onClick="speakBtn_click"
-        android:text="@string/speakBtnLabel" >
+        android:text="@string/speakBtnStartLabel" >
     </Button>
 
 </LinearLayout>
