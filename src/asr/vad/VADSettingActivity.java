@@ -26,6 +26,7 @@ public class VADSettingActivity extends PreferenceActivity implements
 
 	public static String KEY_TRAILER = "trailer";
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -38,6 +39,7 @@ public class VADSettingActivity extends PreferenceActivity implements
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -45,6 +47,7 @@ public class VADSettingActivity extends PreferenceActivity implements
 				.registerOnSharedPreferenceChangeListener(this);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onPause() {
 		super.onPause();
@@ -57,6 +60,7 @@ public class VADSettingActivity extends PreferenceActivity implements
 		updateSummary(sharedPreferences,key);
 	}
 
+	@SuppressWarnings("deprecation")
 	private void updateSummary(SharedPreferences sharedPreferences, String key) {
 		Preference connectionPref = findPreference(key);
 		connectionPref.setSummary(sharedPreferences.getString(key, ""));

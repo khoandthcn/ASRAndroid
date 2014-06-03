@@ -7,9 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.widget.Toast;
-import asr.vad.RecognitionListener;
-import asr.vad.RecognizerTask;
-import asr.vad.VoiceActivityDectector;
 
 public class VoiceRecognizeService extends Service {
 
@@ -97,24 +94,22 @@ public class VoiceRecognizeService extends Service {
 		});
 		this.rec_thread = new Thread(this.rec);
 		new LoadRecognizerTask().execute();
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		this.rec.start();
+//		try {
+//			Thread.sleep(1000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		this.rec.start();
 
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
-		// TODO Auto-generated method stub
-
+		this.rec.shutdown();
 		Toast.makeText(this, "Vietnamese ASR service stopped.",
 				Toast.LENGTH_SHORT).show();
-
 		super.onDestroy();
 	}
 
@@ -122,6 +117,7 @@ public class VoiceRecognizeService extends Service {
 		@Override
 		protected Void doInBackground(Void... v) {
 			rec_thread.start();
+			rec.start();
 			return null;
 		}
 

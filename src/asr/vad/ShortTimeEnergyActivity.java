@@ -14,6 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.os.AsyncTask;
+import asr.service.RecognizerTask;
 import asr.service.VoiceRecognizeService;
 
 public class ShortTimeEnergyActivity extends Activity {
@@ -32,21 +33,20 @@ public class ShortTimeEnergyActivity extends Activity {
 		tv = (TextView) findViewById(R.id.textView);
 		scrollview = (ScrollView) findViewById(R.id.scrollview);
 		speak_btn = (Button) findViewById(R.id.speakBtn);
-
-		// this.rec = new RecognizerTask();
-		// this.rec_thread = new Thread(this.rec);
-		// new LoadRecognizerTask().execute();
 	}
 
 	@Override
 	protected void onResume() {
+		if(isVoiceRecognizeServiceRunning()){
+			// set speak_btn text to "Start Recognize service"
+			speak_btn.setText(R.string.speakBtnStopLabel);
+		}
 		super.onResume();
 	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
-		// this.rec.stop();
 	}
 
 	@Override
