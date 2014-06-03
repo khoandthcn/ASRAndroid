@@ -10,8 +10,9 @@ import android.widget.Toast;
 
 public class VoiceRecognizeService extends Service {
 
-	RecognizerTask rec;
-	Thread rec_thread;
+	private RecognizerTask rec;
+	private Thread rec_thread;
+	
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -94,14 +95,6 @@ public class VoiceRecognizeService extends Service {
 		});
 		this.rec_thread = new Thread(this.rec);
 		new LoadRecognizerTask().execute();
-//		try {
-//			Thread.sleep(1000);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		this.rec.start();
-
 		super.onCreate();
 	}
 
