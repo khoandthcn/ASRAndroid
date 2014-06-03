@@ -1,4 +1,4 @@
-package asr.vad;
+package asr.service;
 
 import android.os.Bundle;
 

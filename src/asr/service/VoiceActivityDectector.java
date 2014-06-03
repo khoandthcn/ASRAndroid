@@ -1,4 +1,4 @@
-package asr.vad;
+package asr.service;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -9,6 +9,8 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
+import asr.vad.ShortTimeEnergyActivity;
+import asr.vad.VADSettingActivity;
 
 /*
  * The VoiceActivityDector class implement a VAD algorithm based on energy of speech signal

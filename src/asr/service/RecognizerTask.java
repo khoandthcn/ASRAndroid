@@ -1,10 +1,8 @@
-package asr.vad;
+package asr.service;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-import android.app.Activity;
-import android.content.Context;
-import android.widget.Toast;
+import asr.vad.ShortTimeEnergyActivity;
 
 /**
  * Speech recognition task, which runs in a worker thread.
@@ -106,7 +104,6 @@ public class RecognizerTask implements Runnable {
 						logI("waiting");
 						this.mailbox.wait();
 						todo = this.mailbox;
-						// log("got" + todo);
 					} catch (InterruptedException e) {
 						/* Quit main loop. */
 						logE("Interrupted waiting for mailbox, shutting down");
@@ -276,28 +273,22 @@ public class RecognizerTask implements Runnable {
 	}
 
 	public void start() {
-		// log("signalling START");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			// log("signalled START");
 			this.mailbox = Event.START;
 		}
 	}
 
 	public void stop() {
-		// log("signalling STOP");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			// log("signalled STOP");
 			this.mailbox = Event.STOP;
 		}
 	}
 
 	public void shutdown() {
-		// log("signalling SHUTDOWN");
 		synchronized (this.mailbox) {
 			this.mailbox.notifyAll();
-			// log("signalled SHUTDOWN");
 			this.mailbox = Event.SHUTDOWN;
 		}
 	}
