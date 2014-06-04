@@ -4,14 +4,13 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" >
-    </uses-permission>
-    <uses-permission android:name="android.permission.RECORD_AUDIO" >
-    </uses-permission>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <uses-sdk
-        android:minSdkVersion="5"
-        android:targetSdkVersion="8" />
+        android:minSdkVersion="9"
+        android:targetSdkVersion="19" />
 
     <application
         android:allowBackup="true"
@@ -26,6 +25,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="VADSettingActivity" android:label="Setting">
+            <meta-data
+		    android:name="android.support.PARENT_ACTIVITY"
+		    android:value="asr.vad.ShortTimeEnergyActivity"/>
+        </activity>
+    
+	    <service
+		  android:name="asr.service.VoiceRecognizeService"
+		  android:icon="@drawable/ic_launcher"
+		  android:label="@string/service_name" >
+		</service>
     </application>
 
 </manifest>
