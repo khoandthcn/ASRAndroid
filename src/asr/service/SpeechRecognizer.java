@@ -36,17 +36,13 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import edu.cmu.pocketsphinx.Config;
 import edu.cmu.pocketsphinx.Decoder;
 import edu.cmu.pocketsphinx.FsgModel;
 import edu.cmu.pocketsphinx.Hypothesis;
-
-import android.media.AudioFormat;
-import android.media.AudioRecord;
-import android.media.MediaRecorder.AudioSource;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 
 /**
  * Main class to access recognizer functions. After configuration this class

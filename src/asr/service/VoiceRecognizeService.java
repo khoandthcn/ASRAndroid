@@ -19,7 +19,7 @@ public class VoiceRecognizeService extends Service {
     private static final String FORECAST_SEARCH = "forecast";
     private static final String DIGITS_SEARCH = "digits";
     private static final String MENU_SEARCH = "menu";
-    private static final String KEYPHRASE = "oh mighty computer";
+    private static final String KEYPHRASE = "digits";
     private SpeechRecognizer recognizer;
 	
 
@@ -43,11 +43,14 @@ public class VoiceRecognizeService extends Service {
 		Toast.makeText(this, "Vietnamese ASR service starting ...",
 				Toast.LENGTH_SHORT).show();
 		new LoadRecognizerTask().execute();
+		Toast.makeText(this, "say digits to start",
+				Toast.LENGTH_LONG).show();
 		super.onCreate();	
 	}
 
 	@Override
 	public void onDestroy() {
+		recognizer.stop();
 		Toast.makeText(this, "Vietnamese ASR service stopped.",
 				Toast.LENGTH_SHORT).show();
 		super.onDestroy();
@@ -114,17 +117,14 @@ public class VoiceRecognizeService extends Service {
 			public void onPartialResult(Hypothesis hypothesis) {
 				String text = hypothesis.getHypstr();
 		        if (text.equals(KEYPHRASE))
-		            switchSearch(MENU_SEARCH);
-		        else if (text.equals(DIGITS_SEARCH))
 		            switchSearch(DIGITS_SEARCH);
-		        else if (text.equals(FORECAST_SEARCH))
-		            switchSearch(FORECAST_SEARCH);
 		        else
 		        	makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onEndOfSpeech() {
+				makeText(getApplicationContext(), "Utterance ended ...", Toast.LENGTH_SHORT).show();
 				if (DIGITS_SEARCH.equals(recognizer.getSearchName())
 		                || FORECAST_SEARCH.equals(recognizer.getSearchName()))
 		            switchSearch(KWS_SEARCH);
@@ -132,7 +132,7 @@ public class VoiceRecognizeService extends Service {
 			
 			@Override
 			public void onBeginningOfSpeech() {
-				// TODO Auto-generated method stub
+				makeText(getApplicationContext(), "Utterance started ...", Toast.LENGTH_SHORT).show();
 			}
 		});
 
