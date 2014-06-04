@@ -14,7 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.os.AsyncTask;
-import asr.service.RecognizerTask;
+import asr.service.VoiceRecorderTask;
 import asr.service.VoiceRecognizeService;
 
 public class ShortTimeEnergyActivity extends Activity {
@@ -22,7 +22,7 @@ public class ShortTimeEnergyActivity extends Activity {
 	protected static ScrollView scrollview;
 	protected static Button speak_btn;
 
-	RecognizerTask rec;
+	VoiceRecorderTask rec;
 	Thread rec_thread;
 
 	/** Called when the activity is first created. */

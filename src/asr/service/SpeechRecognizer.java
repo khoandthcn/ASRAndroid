@@ -55,13 +55,14 @@ import android.util.Log;
  * {@link RecognitionListener}
  * 
  */
-public class SpeechRecognizer {
+public class SpeechRecognizer implements AudioRecordListener {
 
     protected static final String TAG = SpeechRecognizer.class.getSimpleName();
 
     private static final int BUFFER_SIZE = 1024;
 
     private final Decoder decoder;
+    private VoiceRecorderTask rec;
 
     private Thread recognizerThread;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -105,8 +106,10 @@ public class SpeechRecognizer {
 
         Log.i(TAG, format("Start recognition \"%s\"", searchName));
         decoder.setSearch(searchName);
-        recognizerThread = new RecognizerThread();
+        rec = new VoiceRecorderTask();
+        recognizerThread = new Thread(this.rec);
         recognizerThread.start();
+        rec.start();
         return true;
     }
 
@@ -114,14 +117,8 @@ public class SpeechRecognizer {
         if (null == recognizerThread)
             return false;
 
-        try {
-            recognizerThread.interrupt();
-            recognizerThread.join();
-        } catch (InterruptedException e) {
-            // Restore the interrupted status.
-            Thread.currentThread().interrupt();
-        }
-
+        rec.shutdown();
+        rec = null;
         recognizerThread = null;
         return true;
     }
@@ -220,49 +217,6 @@ public class SpeechRecognizer {
         decoder.setKws(name, file.getPath());
     }
 
-    private final class RecognizerThread extends Thread {
-        @Override
-        public void run() {
-            AudioRecord recorder = new AudioRecord(
-                    AudioSource.VOICE_RECOGNITION, sampleRate,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT, 8192); // TODO:calculate
-                                                           // properly
-            decoder.startUtt(null);
-            recorder.startRecording();
-            short[] buffer = new short[BUFFER_SIZE];
-            boolean inSpeech = decoder.getInSpeech();
-
-            while (!interrupted()) {
-                int nread = recorder.read(buffer, 0, buffer.length);
-
-                if (-1 == nread) {
-                    throw new RuntimeException("error reading audio buffer");
-                } else if (nread > 0) {
-                    decoder.processRaw(buffer, nread, false, false);
-
-                    if (decoder.getInSpeech() != inSpeech) {
-                        inSpeech = decoder.getInSpeech();
-                        mainHandler.post(new InSpeechChangeEvent(inSpeech));
-                    }
-
-                    final Hypothesis hypothesis = decoder.hyp();
-                    if (null != hypothesis)
-                        mainHandler.post(new ResultEvent(hypothesis, false));
-                }
-            }
-
-            recorder.stop();
-            int nread = recorder.read(buffer, 0, buffer.length);
-            recorder.release();
-            decoder.processRaw(buffer, nread, false, false);
-            decoder.endUtt();
-
-            // Remove all pending notifications.
-            mainHandler.removeCallbacksAndMessages(null);
-        }
-    }
-
     private abstract class RecognitionEvent implements Runnable {
         public void run() {
             RecognitionListener[] emptyArray = new RecognitionListener[0];
@@ -273,7 +227,8 @@ public class SpeechRecognizer {
         protected abstract void execute(RecognitionListener listener);
     }
 
-    private class InSpeechChangeEvent extends RecognitionEvent {
+    @SuppressWarnings("unused")
+	private class InSpeechChangeEvent extends RecognitionEvent {
         private final boolean state;
 
         InSpeechChangeEvent(boolean state) {
@@ -282,10 +237,10 @@ public class SpeechRecognizer {
 
         @Override
         protected void execute(RecognitionListener listener) {
-//            if (state)
-//                listener.onBeginningOfSpeech();
-//            else
-//                listener.onEndOfSpeech();
+            if (state)
+                listener.onBeginningOfSpeech();
+            else
+                listener.onEndOfSpeech();
         }
     }
 
@@ -300,10 +255,31 @@ public class SpeechRecognizer {
 
         @Override
         protected void execute(RecognitionListener listener) {
-//            if (finalResult)
-//                listener.onResult(hypothesis);
-//            else
-//                listener.onPartialResult(hypothesis);
+            if (finalResult)
+                listener.onResult(hypothesis);
+            else
+                listener.onPartialResult(hypothesis);
         }
     }
+
+	@Override
+	public void utteranceStart() {
+		decoder.startUtt(null);
+	}
+
+	@Override
+	public void readRaw(short[] buf, int length) {
+		decoder.processRaw(buf, length, false, false);
+
+        final Hypothesis hypothesis = decoder.hyp();
+        if (null != hypothesis)
+            mainHandler.post(new ResultEvent(hypothesis, false));
+	}
+
+	@Override
+	public void utteranceEnd(int utt_length) {
+		decoder.endUtt();
+		final Hypothesis hypothesis = decoder.hyp();
+        mainHandler.post(new ResultEvent(hypothesis, true));
+	}
 }

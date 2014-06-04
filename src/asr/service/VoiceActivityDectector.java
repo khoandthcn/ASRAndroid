@@ -7,8 +7,6 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.preference.Preference;
-import android.preference.PreferenceManager;
 import asr.vad.ShortTimeEnergyActivity;
 import asr.vad.VADSettingActivity;
 
@@ -404,12 +402,6 @@ public class VoiceActivityDectector implements Runnable,
 	 * Read as much as possible read data into adbuf;
 	 * */
 	private int readBlock() {
-		// short[] buf = new short[this.block_size];
-		// int nshorts = this.rec.read(buf, 0, buf.length);
-		// if (nshorts > 0) {
-		// this.audioQueue.add(buf);
-		// }
-		// return nshorts;
 		int max = this.block_size;
 		int len, flen, retval;
 		SpeechSegment seg;

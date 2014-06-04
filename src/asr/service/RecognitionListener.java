@@ -1,6 +1,6 @@
 package asr.service;
 
-import android.os.Bundle;
+import edu.cmu.pocketsphinx.Hypothesis;
 
 /**
  * Interface for speech recognition callbacks.
@@ -12,6 +12,17 @@ import android.os.Bundle;
  * 
  */
 public interface RecognitionListener {
+	
+	/**
+     * Called at the start of utterance.
+     */
+    public void onBeginningOfSpeech();
+
+    /**
+     * Called at the end of utterance.
+     */
+    public void onEndOfSpeech();
+    
 	/**
 	 * Called on the recognition thread when partial results are available.
 	 * 
@@ -22,7 +33,7 @@ public interface RecognitionListener {
 	 *            Bundle containing the partial result string under the "hyp"
 	 *            key.
 	 */
-	abstract void onPartialResults(Bundle b);
+    public void onPartialResult(Hypothesis hypothesis);
 
 	/**
 	 * Called when final results are available.
@@ -33,20 +44,5 @@ public interface RecognitionListener {
 	 * @param b
 	 *            Bundle containing the final result string under the "hyp" key.
 	 */
-	abstract void onResults(Bundle b);
-
-	/**
-	 * Called if a recognition error occurred.
-	 * 
-	 * Note: This will only ever be passed -1 for the moment, which corresponds
-	 * to a recognition failure (null result).
-	 * 
-	 * @param err
-	 *            Code representing the error that occurred.
-	 */
-	abstract void onError(int err);
-	
-	abstract void onSpeechStartpoint();
-	
-	abstract void onSpeechEndpoint(int utteranceLength);
+    public void onResult(Hypothesis hypothesis);
 }
