@@ -6,4 +6,4 @@
 
 grammar digits;
 
-public <numbers> = (KHÔNG | MỘT | HAI | BA | BỐN | NĂM | SÁU | BẢY | TÁM | CHÍN | UNK) * ;
+public <numbers> = (KHÔNG | MỘT | HAI | BA | BỐN | NĂM | SÁU | BẢY | TÁM | CHÍN) * ;

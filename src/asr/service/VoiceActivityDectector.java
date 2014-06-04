@@ -52,7 +52,7 @@ public class VoiceActivityDectector implements Runnable,
 	public static double ADAPTED_RATE = 0.2;
 
 	/* Sampling rate */
-	public static int SAMPLING_RATE = 16000;
+	public static int SAMPLING_RATE = 8000;
 
 	/* Default background noise power level */
 	public static int DEFAULT_NOISE = 30;

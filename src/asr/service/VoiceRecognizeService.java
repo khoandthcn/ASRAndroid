@@ -100,8 +100,9 @@ public class VoiceRecognizeService extends Service {
     private void setupRecognizer(File assetsDir) {
         File modelsDir = new File(assetsDir, "models");
         recognizer = SpeechRecognizerSetup.defaultSetup()
-                .setAcousticModel(new File(modelsDir, "hmm/vi"))
-                .setDictionary(new File(modelsDir, "dict/vi_subtitle_know_ascii.dic"))
+                .setAcousticModel(new File(modelsDir, "hmm/vidigits_8k"))
+                .setDictionary(new File(modelsDir, "dict/vidigits_8k.dic"))
+                .setSampleRate(8000)
                 .setRawLogDir(assetsDir).setKeywordThreshold(1e-20f)
                 .getRecognizer();
         recognizer.addListener(new RecognitionListener() {
@@ -120,7 +121,7 @@ public class VoiceRecognizeService extends Service {
 //		        if (text.equals(KEYPHRASE))
 //		            switchSearch(DIGITS_SEARCH);
 //		        else
-		        	makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+//		        	makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override

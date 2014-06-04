@@ -1,5 +1,6 @@
 models/dict/cmu07a.dic
 models/dict/vi_subtitle_know_ascii.dic
+models/dict/vidigits_8k.dic
 models/grammar/digits.gram
 models/grammar/menu.gram
 models/grammar/vi_digits.fsg
@@ -20,4 +21,12 @@ models/hmm/vi/noisedict-01
 models/hmm/vi/sendump
 models/hmm/vi/transition_matrices
 models/hmm/vi/variances
+models/hmm/vidigits_8k/feat.params
+models/hmm/vidigits_8k/mdef
+models/hmm/vidigits_8k/means
+models/hmm/vidigits_8k/mixture_weights
+models/hmm/vidigits_8k/noisedict
+models/hmm/vidigits_8k/sendump
+models/hmm/vidigits_8k/transition_matrices
+models/hmm/vidigits_8k/variances
 models/lm/weather.dmp

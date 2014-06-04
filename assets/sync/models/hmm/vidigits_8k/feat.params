@@ -1,0 +1,7 @@
+-nfilt 31
+-lowerf 200
+-upperf 3500
+-feat s2_4x
+-agc none
+-cmn current
+-varnorm no
