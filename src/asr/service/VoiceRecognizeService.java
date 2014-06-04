@@ -19,7 +19,7 @@ public class VoiceRecognizeService extends Service {
     private static final String FORECAST_SEARCH = "forecast";
     private static final String DIGITS_SEARCH = "digits";
     private static final String MENU_SEARCH = "menu";
-    private static final String KEYPHRASE = "digits";
+    private static final String KEYPHRASE = "hello";
     private SpeechRecognizer recognizer;
 	
 
@@ -40,11 +40,11 @@ public class VoiceRecognizeService extends Service {
 	public void onCreate() {
 		// TODO Auto-generated method stub
 
-		Toast.makeText(this, "Vietnamese ASR service starting ...",
+		Toast.makeText(this, "Vietnamese continuous digits ASR service starting ...",
 				Toast.LENGTH_SHORT).show();
 		new LoadRecognizerTask().execute();
-		Toast.makeText(this, "say digits to start",
-				Toast.LENGTH_LONG).show();
+//		Toast.makeText(this, "say HELLO to start",
+//				Toast.LENGTH_LONG).show();
 		super.onCreate();	
 	}
 
@@ -83,7 +83,8 @@ public class VoiceRecognizeService extends Service {
 					}
 				});
             } else {
-                switchSearch(KWS_SEARCH);
+//                switchSearch(KWS_SEARCH);
+            	recognizer.startListening(DIGITS_SEARCH);
             }
 		}
 	}
@@ -99,8 +100,8 @@ public class VoiceRecognizeService extends Service {
     private void setupRecognizer(File assetsDir) {
         File modelsDir = new File(assetsDir, "models");
         recognizer = SpeechRecognizerSetup.defaultSetup()
-                .setAcousticModel(new File(modelsDir, "hmm/en-us-semi"))
-                .setDictionary(new File(modelsDir, "dict/cmu07a.dic"))
+                .setAcousticModel(new File(modelsDir, "hmm/vi"))
+                .setDictionary(new File(modelsDir, "dict/vi_subtitle_know_ascii.dic"))
                 .setRawLogDir(assetsDir).setKeywordThreshold(1e-20f)
                 .getRecognizer();
         recognizer.addListener(new RecognitionListener() {
@@ -116,18 +117,18 @@ public class VoiceRecognizeService extends Service {
 			@Override
 			public void onPartialResult(Hypothesis hypothesis) {
 				String text = hypothesis.getHypstr();
-		        if (text.equals(KEYPHRASE))
-		            switchSearch(DIGITS_SEARCH);
-		        else
+//		        if (text.equals(KEYPHRASE))
+//		            switchSearch(DIGITS_SEARCH);
+//		        else
 		        	makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onEndOfSpeech() {
 				makeText(getApplicationContext(), "Utterance ended ...", Toast.LENGTH_SHORT).show();
-				if (DIGITS_SEARCH.equals(recognizer.getSearchName())
-		                || FORECAST_SEARCH.equals(recognizer.getSearchName()))
-		            switchSearch(KWS_SEARCH);
+//				if (DIGITS_SEARCH.equals(recognizer.getSearchName())
+//		                || FORECAST_SEARCH.equals(recognizer.getSearchName()))
+//		            switchSearch(KWS_SEARCH);
 			}
 			
 			@Override
@@ -137,14 +138,14 @@ public class VoiceRecognizeService extends Service {
 		});
 
         // Create keyword-activation search.
-        recognizer.addKeyphraseSearch(KWS_SEARCH, KEYPHRASE);
+//        recognizer.addKeyphraseSearch(KWS_SEARCH, KEYPHRASE);
         // Create grammar-based searches.
-        File menuGrammar = new File(modelsDir, "grammar/menu.gram");
-        recognizer.addGrammarSearch(MENU_SEARCH, menuGrammar);
-        File digitsGrammar = new File(modelsDir, "grammar/digits.gram");
+//        File menuGrammar = new File(modelsDir, "grammar/menu.gram");
+//        recognizer.addGrammarSearch(MENU_SEARCH, menuGrammar);
+        File digitsGrammar = new File(modelsDir, "grammar/vi_digits.gram");
         recognizer.addGrammarSearch(DIGITS_SEARCH, digitsGrammar);
         // Create language model search.
-        File languageModel = new File(modelsDir, "lm/weather.dmp");
-        recognizer.addNgramSearch(FORECAST_SEARCH, languageModel);
+//        File languageModel = new File(modelsDir, "lm/weather.dmp");
+//        recognizer.addNgramSearch(FORECAST_SEARCH, languageModel);
     }
 }

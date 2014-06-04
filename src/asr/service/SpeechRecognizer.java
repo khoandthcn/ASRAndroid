@@ -103,6 +103,7 @@ public class SpeechRecognizer implements AudioRecordListener {
         Log.i(TAG, format("Start recognition \"%s\"", searchName));
         decoder.setSearch(searchName);
         rec = new VoiceRecorderTask();
+        rec.addAudioRecordListener(this);
         recognizerThread = new Thread(this.rec);
         recognizerThread.start();
         rec.start();

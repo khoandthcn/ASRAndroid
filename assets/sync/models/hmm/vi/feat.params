@@ -1,0 +1,14 @@
+-alpha 0.97
+-doublebw no
+-nfilt 31
+-ncep 13
+-lowerf 1.3333334
+-upperf 3855.4976
+-samprate 8000
+-nfft 512
+-wlen 0.0256
+-transform legacy
+-feat s2_4x
+-agc none
+-cmn current
+-varnorm no
