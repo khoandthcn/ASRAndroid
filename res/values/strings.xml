@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ShortTimeEnergyActivity</string>
-    <string name="speakBtnLabel">Speak</string>
+    <string name="speakBtnStartLabel">Start Recognize service</string>
+    <string name="speakBtnStopLabel">Stop Recognize service</string>
+    <string name="threshold_update_t">Threshold update period</string>
+    <string name="default_threshold_update_period">100</string>
+    <string name="adapt_rate_t">Adapt rate</string>
+    <string name="default_adapt_rate">0.2</string>
+    <string name="noise_level_t">Noise power level</string>
+    <string name="default_noise_level">30</string>
+    <string name="window_size_t">Window size</string>
+    <string name="default_window_size">21</string>
+    <string name="speech_on_set_t">Speech on set</string>
+    <string name="default_speech_on_set">9</string>
+    <string name="sil_on_set_t">SIL on set</string>
+    <string name="default_sil_on_set">18</string>
+    <string name="leader_t">LEADER</string>
+    <string name="default_leader">5</string>
+    <string name="trailer_t">TRAILER</string>
+    <string name="default_trailer">10</string>
+    <string name="setting_t">Setting</string>
+    <string name="service_name">Vietnamese ASR Service</string>
 </resources>
